@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>قططي — حوّل قطتك لميم</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Bangers&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0b14;
+    --card: #16131f;
+    --border: #2a2340;
+    --accent: #f7c948;
+    --accent2: #ff6b6b;
+    --accent3: #7cf5a2;
+    --text: #f0eaff;
+    --muted: #7a7090;
+    --purple: #9b72f5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Stars bg */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(155,114,245,0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(247,201,72,0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--d) ease-in-out infinite alternate;
+    opacity: 0.4;
+  }
+  @keyframes twinkle { to { opacity: 0.05; transform: scale(0.5); } }
+
+  header {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 48px 20px 24px;
+  }
+
+  .logo {
+    font-family: 'Bangers', cursive;
+    font-size: clamp(48px, 8vw, 90px);
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--purple) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    text-shadow: none;
+    filter: drop-shadow(0 0 30px rgba(247,201,72,0.3));
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 16px;
+    margin-top: 8px;
+    letter-spacing: 1px;
+  }
+
+  .paw-row {
+    font-size: 24px;
+    margin-top: 6px;
+    opacity: 0.6;
+  }
+
+  /* Main layout */
+  main {
+    position: relative;
+    z-index: 10;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+    display: grid;
+    gap: 24px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.6;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title span { font-size: 22px; }
+
+  /* Upload area */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: rgba(155,114,245,0.03);
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--purple);
+    background: rgba(155,114,245,0.08);
+    transform: scale(1.01);
+  }
+  .upload-zone input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .upload-icon { font-size: 48px; margin-bottom: 12px; }
+  .upload-text { color: var(--muted); font-size: 15px; }
+  .upload-hint { font-size: 12px; color: var(--muted); margin-top: 6px; opacity: 0.6; }
+
+  #preview-wrap {
+    display: none;
+    text-align: center;
+    margin-top: 16px;
+  }
+  #preview-img {
+    max-height: 220px;
+    max-width: 100%;
+    border-radius: 12px;
+    border: 2px solid var(--purple);
+    box-shadow: 0 0 30px rgba(155,114,245,0.3);
+    object-fit: cover;
+  }
+  .change-btn {
+    display: inline-block;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  /* Scenarios */
+  .scenarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+  }
+  .scenario-btn {
+    background: rgba(255,255,255,0.03);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .scenario-btn .emoji { font-size: 26px; display: block; margin-bottom: 6px; }
+  .scenario-btn:hover {
+    border-color: var(--accent);
+    background: rgba(247,201,72,0.06);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(247,201,72,0.1);
+  }
+  .scenario-btn.active {
+    border-color: var(--accent);
+    background: rgba(247,201,72,0.1);
+    box-shadow: 0 0 20px rgba(247,201,72,0.15);
+  }
+
+  /* Customizer */
+  .options-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  @media(max-width: 520px) { .options-row { grid-template-columns: 1fr; } }
+
+  .option-group label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .option-group select, .option-group input[type=text] {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  .option-group select:focus, .option-group input:focus {
+    border-color: var(--purple);
+  }
+
+  .toggle-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .toggle-chip {
+    background: rgba(255,255,255,0.04);
+    border: 1.5px solid var(--border);
+    border-radius: 30px;
+    padding: 7px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+  }
+  .toggle-chip.active {
+    border-color: var(--accent3);
+    background: rgba(124,245,162,0.1);
+    color: var(--accent3);
+  }
+
+  /* Prompt output */
+  .prompt-box {
+    background: rgba(0,0,0,0.3);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #d4ccee;
+    white-space: pre-wrap;
+    min-height: 80px;
+    position: relative;
+    direction: ltr;
+    font-family: monospace;
+    letter-spacing: 0.2px;
+  }
+  .prompt-placeholder {
+    color: var(--muted);
+    font-style: italic;
+    direction: rtl;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+  }
+
+  .generate-btn {
+    width: 100%;
+    padding: 18px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent) 0%, #ffaa00 100%);
+    color: #0d0b14;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.25s;
+    letter-spacing: 1px;
+    margin-top: 8px;
+  }
+  .generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(247,201,72,0.35);
+    filter: brightness(1.05);
+  }
+  .generate-btn:active { transform: scale(0.98); }
+
+  .action-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .copy-btn, .reset-btn {
+    flex: 1;
+    padding: 13px;
+    border-radius: 12px;
+    border: 1.5px solid;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-btn {
+    border-color: var(--purple);
+    background: rgba(155,114,245,0.1);
+    color: var(--purple);
+  }
+  .copy-btn:hover { background: rgba(155,114,245,0.2); }
+  .copy-btn.copied {
+    border-color: var(--accent3);
+    color: var(--accent3);
+    background: rgba(124,245,162,0.1);
+  }
+  .reset-btn {
+    border-color: var(--border);
+    background: transparent;
+    color: var(--muted);
+  }
+  .reset-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  /* Where to use */
+  .tools-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .tool-chip {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 8px 18px;
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tool-chip .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent3);
+    flex-shrink: 0;
+  }
+
+  /* Fun fact */
+  .fun-fact {
+    background: linear-gradient(135deg, rgba(247,201,72,0.06), rgba(255,107,107,0.04));
+    border: 1px solid rgba(247,201,72,0.15);
+    border-radius: 14px;
+    padding: 16px 20px;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .fun-fact strong { color: var(--accent); }
+
+  /* Tip badge */
+  .tip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(124,245,162,0.08);
+    border: 1px solid rgba(124,245,162,0.2);
+    border-radius: 30px;
+    padding: 4px 14px;
+    font-size: 12px;
+    color: var(--accent3);
+    margin-bottom: 12px;
+  }
+
+  .highlight { color: var(--accent); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<header>
+  <div class="logo">🐾 قططي</div>
+  <p class="subtitle">حوّل قطتك الملكية إلى ميم أسطوري</p>
+  <div class="paw-row">🐱 ✦ 😂 ✦ 🐾</div>
+</header>
+
+<main>
+
+  <!-- STEP 1: Upload -->
+  <div class="card">
+    <div class="section-title"><span>📸</span> الخطوة الأولى — صورة قطتك</div>
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" accept="image/*" id="file-input">
+      <div class="upload-icon">🐈</div>
+      <div class="upload-text">اسحب صورة قطتك هنا أو اضغط للرفع</div>
+      <div class="upload-hint">PNG / JPG / WEBP · حتى 20MB</div>
+    </div>
+    <div id="preview-wrap">
+      <img id="preview-img" src="" alt="قطتك">
+      <div class="change-btn" id="change-btn">🔄 غيّر الصورة</div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Scenario -->
+  <div class="card">
+    <div class="section-title"><span>🎭</span> الخطوة الثانية — اختار السيناريو</div>
+    <div class="scenarios-grid" id="scenarios">
+      <!-- injected by JS -->
+    </div>
+  </div>
+
+  <!-- STEP 3: Customizer -->
+  <div class="card">
+    <div class="section-title"><span>🎨</span> الخطوة الثالثة — خصّص الميم</div>
+    <div class="options-row">
+      <div class="option-group">
+        <label>🖼️ نوع الخلفية</label>
+        <select id="bg-style">
+          <option value="simple gradient">تدرج بسيط ناعم</option>
+          <option value="outer space with stars">الفضاء الخارجي بالنجوم</option>
+          <option value="cozy living room">غرفة معيشة دافئة</option>
+          <option value="royal golden palace">قصر ملكي ذهبي</option>
+          <option value="beach sunset">شاطئ وغروب شمس</option>
+          <option value="office with tiny desk">مكتب صغير مضحك</option>
+          <option value="pure black dramatic">خلفية سوداء درامية</option>
+        </select>
+      </div>
+      <div class="option-group">
+        <label>💬 نص الميم (اختياري)</label>
+        <input type="text" id="meme-text" placeholder="مثلاً: لما تشوف الأكل من بعيد 😂">
+      </div>
+    </div>
+    <div class="option-group" style="margin-bottom:16px;">
+      <label>✨ إكسسوارات مضحكة</label>
+      <div class="toggle-row" id="accessories">
+        <!-- injected by JS -->
+      </div>
+    </div>
+    <div class="option-group">
+      <label>🎯 مستوى الكوميديا</label>
+      <div class="toggle-row" id="comedy-level">
+        <div class="toggle-chip active" data-val="mildly funny and cute">هادئ 😌</div>
+        <div class="toggle-chip" data-val="hilariously funny and exaggerated">مضحك جداً 😂</div>
+        <div class="toggle-chip" data-val="absurdly chaotic and over the top">فوضى كاملة 🤣</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Generate -->
+  <div class="card">
+    <div class="section-title"><span>✨</span> الخطوة الرابعة — احصل على البرومبت</div>
+    <div class="tip">💡 انسخ البرومبت واستخدمه في ChatGPT أو Midjourney أو أي أداة AI</div>
+    <button class="generate-btn" id="generate-btn">🪄 ولّد البرومبت الآن</button>
+    <div style="margin-top:18px;">
+      <div class="prompt-box" id="prompt-output">
+        <span class="prompt-placeholder">اختر سيناريو وخصّص الميم، ثم اضغط "ولّد البرومبت" 👆</span>
+      </div>
+    </div>
+    <div class="action-row" id="action-row" style="display:none;">
+      <button class="copy-btn" id="copy-btn">📋 انسخ البرومبت</button>
+      <button class="reset-btn" id="reset-btn">🔄 ابدأ من جديد</button>
+    </div>
+  </div>
+
+  <!-- Where to use -->
+  <div class="card">
+    <div class="section-title"><span>🚀</span> وين تستخدم البرومبت؟</div>
+    <div class="tools-row">
+      <div class="tool-chip"><div class="dot"></div>ChatGPT (DALL·E)</div>
+      <div class="tool-chip"><div class="dot"></div>Midjourney</div>
+      <div class="tool-chip"><div class="dot"></div>Adobe Firefly</div>
+      <div class="tool-chip"><div class="dot"></div>Canva AI</div>
+      <div class="tool-chip"><div class="dot"></div>Bing Image Creator</div>
+      <div class="tool-chip"><div class="dot"></div>Stable Diffusion</div>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin-top:14px;line-height:1.7;">
+      💡 <strong style="color:var(--text)">نصيحة:</strong> في ChatGPT، ارفع صورة قطتك مع البرومبت مباشرة وقل له "استخدم هذا البرومبت وطبّقه على الصورة" للحصول على أفضل نتيجة.
+    </p>
+  </div>
+
+  <!-- Fun fact -->
+  <div class="fun-fact">
+    <strong>🐾 هل تعلم؟</strong> أكثر من <strong>%65</strong> من الميمز على الإنترنت فيها قطط — قطتك تستحق مكانها في التاريخ! 😂
+  </div>
+
+</main>
+
+<script>
+const scenarios = [
+  { emoji: '👑', label: 'الملكة / الملك', key: 'royal' },
+  { emoji: '😎', label: 'كول بوي', key: 'cool' },
+  { emoji: '💼', label: 'مدير تنفيذي', key: 'ceo' },
+  { emoji: '🥒', label: 'شاف خيارة', key: 'cucumber' },
+  { emoji: '🕵️', label: 'محقق', key: 'detective' },
+  { emoji: '🎤', label: 'نجم موسيقي', key: 'singer' },
+  { emoji: '🧠', label: 'فيلسوف', key: 'philosopher' },
+  { emoji: '💤', label: 'مرهق من الحياة', key: 'tired' },
+  { emoji: '🏖️', label: 'في إجازة', key: 'vacation' },
+  { emoji: '🕺', label: 'يرقص وحده', key: 'dancing' },
+  { emoji: '🍕', label: 'يحرس الأكل', key: 'food' },
+  { emoji: '🚀', label: 'رائد فضاء', key: 'astronaut' },
+];
+
+const scenarioPrompts = {
+  royal: `Create a hilarious and adorable meme featuring this cat as an absolute royal monarch. The cat should be sitting on a tiny ornate golden throne, wearing a miniature velvet crown slightly tilted to one side (making it funnier), looking supremely judgemental and unimpressed at everyone beneath it. Add a small royal scepter next to it. The cat's expression should scream "I allow your existence... barely."`,
+  cool: `Create a funny and cute meme with this cat wearing tiny cool sunglasses, leaning back in a relaxed pose as if it owns the entire universe. The cat should look effortlessly stylish and completely unbothered. Add a subtle lens flare on the glasses. Vibe: 100% swagger, 0% effort.`,
+  ceo: `Create a hilarious meme where this cat is a powerful CEO sitting behind a comically tiny executive desk with a miniature laptop, a tiny coffee mug labeled "BOSS", and a stack of small papers. The cat should look intensely serious and important, staring directly at the camera with a "I run this company and also I knocked everything off your desk" look.`,
+  cucumber: `Create a funny meme capturing the exact moment this cat notices a cucumber behind it. The cat's eyes are HUGE, pupils massive, fur slightly puffed up, all four paws barely touching the ground — frozen mid-jump in pure horror. The cucumber should be in the background, doing absolutely nothing. Classic cat panic energy.`,
+  detective: `Create a cute yet hilarious meme where this cat is a serious detective. The cat is wearing a tiny deerstalker hat (Sherlock Holmes style) and holding a comically small magnifying glass. It's examining a tiny empty food bowl with intense concentration. Add a speech bubble or caption like "The treats... vanished without a trace." Dark, dramatic lighting.`,
+  singer: `Create a funny meme where this cat is a full rockstar superstar, holding a tiny dramatic microphone and belting a performance at 3AM. The cat's mouth is wide open mid-meow, eyes closed with emotion. Add tiny stage lights. The caption energy should be "performing for no one, committed to everything."`,
+  philosopher: `Create a hilarious meme where this cat is a deep philosopher. The cat sits in a classic "The Thinker" pose with its tiny paw under its chin, staring into the distance with an expression of profound cosmic contemplation. Add a tiny blackboard behind it with "why is the food bowl always empty?" written on it. Optional: add a tiny beard for maximum philosopher credibility.`,
+  tired: `Create a relatable meme of this cat looking absolutely DONE with everything. The cat is dramatically draped over the edge of a surface like a wet noodle, eyes half-closed, expression of total exhaustion and existential defeat. Add dark circles under the eyes for comedy. The energy: "I did nothing all day and I am exhausted from it."`,
+  vacation: `Create a funny adorable meme of this cat on a tiny vacation. The cat is relaxing in a miniature woven hammock between two tiny palm trees, wearing a small straw hat and holding a tiny umbrella drink. The cat's expression is one of supreme relaxation and total refusal to be disturbed. Pure "do not contact me unless someone opens a can" energy.`,
+  dancing: `Create a hilarious meme of this cat dancing awkwardly and enthusiastically at a party, completely alone on a dance floor with disco lights flashing. The cat's moves are objectively terrible but it is fully committed and proud. Nobody invited this cat. The cat does not care. This is its moment.`,
+  food: `Create a funny meme of this cat sitting directly in front of a pizza or plate of food, staring at it with an intense laser-focused gaze. The cat is not touching it — just WATCHING. Protecting it from threats? Planning? Both. The expression: "This is mine. I will not eat it. But it is mine."`,
+  astronaut: `Create a hilarious adorable meme of this cat as a tiny astronaut floating in outer space. The cat is wearing a custom miniature spacesuit (with a tiny helmet showing its face clearly) and looks completely unbothered and peaceful floating among the stars. One paw is gently batting at a distant planet. Caption energy: "launched itself into space. No reason. Just wanted to."`,
+};
+
+const accessories = [
+  { emoji: '👑', label: 'تاج صغير', key: 'tiny golden crown' },
+  { emoji: '😎', label: 'نظارات شمس', key: 'tiny cool sunglasses' },
+  { emoji: '🎩', label: 'قبعة أنيقة', key: 'tiny top hat' },
+  { emoji: '🎀', label: 'ربطة عنق', key: 'small bow tie' },
+  { emoji: '🧣', label: 'وشاح', key: 'cozy scarf' },
+  { emoji: '🎂', label: 'قبعة حفلة', key: 'party hat' },
+  { emoji: '🔮', label: 'عصا سحرية', key: 'tiny magic wand' },
+];
+
+let selectedScenario = null;
+let selectedAccessories = new Set();
+let selectedComedy = 'mildly funny and cute';
+let hasImage = false;
+let generatedPrompt = '';
+
+// Stars
+function createStars() {
+  const container = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `
+      width:${size}px; height:${size}px;
+      top:${Math.random()*100}%; left:${Math.random()*100}%;
+      --d:${Math.random()*3+2}s;
+      animation-delay:${Math.random()*4}s;
+    `;
+    container.appendChild(s);
+  }
+}
+createStars();
+
+// Scenarios
+const scenGrid = document.getElementById('scenarios');
+scenarios.forEach(s => {
+  const btn = document.createElement('div');
+  btn.className = 'scenario-btn';
+  btn.dataset.key = s.key;
+  btn.innerHTML = `<span class="emoji">${s.emoji}</span>${s.label}`;
+  btn.onclick = () => {
+    document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedScenario = s.key;
+  };
+  scenGrid.appendChild(btn);
+});
+
+// Accessories
+const accRow = document.getElementById('accessories');
+accessories.forEach(a => {
+  const chip = document.createElement('div');
+  chip.className = 'toggle-chip';
+  chip.textContent = `${a.emoji} ${a.label}`;
+  chip.dataset.val = a.key;
+  chip.onclick = () => {
+    chip.classList.toggle('active');
+    if (selectedAccessories.has(a.key)) selectedAccessories.delete(a.key);
+    else selectedAccessories.add(a.key);
+  };
+  accRow.appendChild(chip);
+});
+
+// Comedy level
+document.querySelectorAll('#comedy-level .toggle-chip').forEach(chip => {
+  chip.onclick = () => {
+    document.querySelectorAll('#comedy-level .toggle-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    selectedComedy = chip.dataset.val;
+  };
+});
+
+// Upload
+const fileInput = document.getElementById('file-input');
+const uploadZone = document.getElementById('upload-zone');
+const previewWrap = document.getElementById('preview-wrap');
+const previewImg = document.getElementById('preview-img');
+
+fileInput.addEventListener('change', handleFile);
+document.getElementById('change-btn').onclick = () => fileInput.click();
+
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) showPreview(e.dataTransfer.files[0]);
+});
+
+function handleFile(e) {
+  if (e.target.files[0]) showPreview(e.target.files[0]);
+}
+function showPreview(file) {
+  const url = URL.createObjectURL(file);
+  previewImg.src = url;
+  previewWrap.style.display = 'block';
+  uploadZone.style.display = 'none';
+  hasImage = true;
+}
+
+// Generate
+document.getElementById('generate-btn').onclick = () => {
+  if (!selectedScenario) {
+    alert('🐾 اختر سيناريو مضحك أولاً!');
+    return;
+  }
+
+  const basePrompt = scenarioPrompts[selectedScenario];
+  const bg = document.getElementById('bg-style').value;
+  const memeText = document.getElementById('meme-text').value.trim();
+  const accList = [...selectedAccessories];
+
+  let prompt = basePrompt + '\n\n';
+
+  prompt += `IMPORTANT — STYLE & QUALITY REQUIREMENTS:\n`;
+  prompt += `• Keep the cat's original face, fur pattern, colors, and realistic details EXACTLY as in the photo. Do not distort or alter the cat's appearance.\n`;
+  prompt += `• Style: high quality, vibrant colors, sharp details, ${selectedComedy} vibe, perfect for social media sharing.\n`;
+  prompt += `• Background: ${bg} — clean and simple so the cat remains the undisputed star.\n`;
+
+  if (accList.length > 0) {
+    prompt += `• Accessories (keep minimal and natural): ${accList.join(', ')}.\n`;
+  }
+
+  prompt += `• Text: Add bold white Impact font meme text with black outline.`;
+  if (memeText) {
+    prompt += ` Use this text: "${memeText}"`;
+  } else {
+    prompt += ` Choose a short, witty, relatable meme caption that perfectly fits the scenario.`;
+  }
+  prompt += `\n• Place text at top and/or bottom of the image in classic meme format.\n`;
+  prompt += `• Final result must be funny, wholesome, extremely shareable, and make people laugh out loud.`;
+
+  if (hasImage) {
+    prompt += `\n\n[REFERENCE: Use the uploaded cat photo as the subject — maintain likeness and realism.]`;
+  }
+
+  generatedPrompt = prompt;
+  const output = document.getElementById('prompt-output');
+  output.textContent = prompt;
+
+  document.getElementById('action-row').style.display = 'flex';
+  output.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+};
+
+// Copy
+document.getElementById('copy-btn').onclick = () => {
+  navigator.clipboard.writeText(generatedPrompt).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✅ تم النسخ!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 انسخ البرومبت';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+};
+
+// Reset
+document.getElementById('reset-btn').onclick = () => {
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#accessories .toggle-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#comedy-level .toggle-chip').forEach(c => c.classList.remove('active'));
+  document.querySelector('#comedy-level .toggle-chip').classList.add('active');
+  document.getElementById('meme-text').value = '';
+  document.getElementById('bg-style').selectedIndex = 0;
+  selectedScenario = null;
+  selectedAccessories = new Set();
+  selectedComedy = 'mildly funny and cute';
+  document.getElementById('prompt-output').innerHTML = '<span class="prompt-placeholder">اختر سيناريو وخصّص الميم، ثم اضغط "ولّد البرومبت" 👆</span>';
+  document.getElementById('action-row').style.display = 'none';
+};
+</script>
+</body>
+</html>
